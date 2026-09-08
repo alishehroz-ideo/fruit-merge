@@ -30,7 +30,13 @@
          across a wide letterboxed viewport looks broken.
 
          #0e0e12 stays underneath as the fallback while the JPG is in flight, and it is what
-         paints the letterbox bars. It must match GROUND in bake_loading_bg.py. */
+         paints the letterbox bars. It must match GROUND in bake_loading_bg.py.
+
+         THE IMAGE IS TAKEN BACK OFF once Unity renders — search for
+         `container.style.background` in the createUnityInstance().then() handler below. That
+         teardown is half of this feature, not an extra: because this element paints the
+         letterbox bars, leaving the image set keeps it on screen for the whole session. The
+         two halves are forty lines and one language apart, so each names the other. */
       #unity-container {
         position: fixed; inset: 0;
         background: #0e0e12 url('TemplateData/loading-bg.jpg') center / cover no-repeat;
@@ -289,6 +295,19 @@
           killEl("#unity-progress-bar-empty");
           killEl("#unity-progress-percent");
           killEl("#unity-loading-bar");
+
+          // The backdrop is a LOADING backdrop, and it has to come down with the rest of the
+          // loading UI. #unity-container is the FULL VIEWPORT while the canvas is letterboxed
+          // inside it, so the rule that sets the image (search: "#unity-container" in the
+          // <style> block above) is also what paints the LETTERBOX BARS. Leave it set and a
+          // band of blurred key art sits above and below the game for the whole session, with
+          // a visible seam at the canvas edge — which does not read as a loading leftover, it
+          // reads as the game rendering wrong.
+          //
+          // #0e0e12 must stay identical to the fallback in that CSS rule and to GROUND in
+          // Tools/bake_loading_bg.py.
+          var container = document.querySelector("#unity-container");
+          if (container) container.style.background = "#0e0e12";
 
           resizeCanvas();
 
